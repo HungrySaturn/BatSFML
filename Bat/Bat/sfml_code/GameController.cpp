@@ -119,10 +119,10 @@ void GameController::initBat()
 void GameController::updateBat()
 
 {
-    // update flappy
+    // získání y pozice netopýra
     float by = mBat.sprite.getPosition().y;
    
-    
+    // imitace létání
     if (mGame.gameState == waiting || mGame.gameState == started) {
 
         // mění texturu každých 6 snímků
@@ -134,15 +134,15 @@ void GameController::updateBat()
             mBat.frame = 0;
         }
     }
-    
+    // změna textury
     mBat.sprite.setTexture(mTextures.bat[mBat.frame]);
 
-    // move flappy
+    // pohyb, rychlost netopýra
     if (mGame.gameState == started) {
         mBat.sprite.move(0, mBat.v);
         mBat.v += 0.6;
     }
-    
+    // zamezuje stoupat mimo obrazovku a kontakt se zemí->gameover
     if (mGame.gameState == started) {
         if (by < 0) {
             mBat.sprite.setPosition(250, 0);
@@ -184,27 +184,25 @@ void GameController::generatePipes()
     
     if (mGame.gameState == started && mGame.frames % 120 == 0) {
         
-        int r = rand() % 275 + 75;
-        int gap = 160;
+        int s = rand() % 275 + 75;
+        int space = 160;
         
-        // lower pipe
+        // pomocné lajny sloužící k určení kolize
+       
+        Line lineL(sf::Vector2f(335, 5), sf::Vector2f(1150, s+space+10), 95);
+        Line lineP(sf::Vector2f(335, 5), sf::Vector2f(1150, s-10), 265);
         
-        
-        Line lineL(sf::Vector2f(335, 5), sf::Vector2f(1150, r+gap+10), 95);
-        Line lineP(sf::Vector2f(335, 5), sf::Vector2f(1150, r-10), 265);
-        
-        // lower pipe
+        // spodní sloup
         Pipe pipeL;
         pipeL.sprite.setTexture(mTextures.pipe);
-        pipeL.sprite.setPosition(1000, r + gap);
+        pipeL.sprite.setPosition(1000, s + space);
         pipeL.sprite.setScale(2, 2);
-        
        
         
-        // upper pipe
+        // horní sloup
         Pipe pipeU;
         pipeU.sprite.setTexture(mTextures.pipe);
-        pipeU.sprite.setPosition(1000, r);
+        pipeU.sprite.setPosition(1000, s);
         pipeU.sprite.setScale(2, -2);
 
         // push to the array
@@ -228,7 +226,7 @@ void GameController::generatePipes()
     }
     
    
-        
+// metoda pohybuje sloupy a pak je odstraňuje        
 void GameController::movePipes()
 {
     if (mGame.gameState == started) {
@@ -240,7 +238,7 @@ void GameController::movePipes()
             
         }
     
-    // remove pipes if offscreen
+    // odstranění sloupů mimo obrazovku
     if (mGame.frames % 100 == 0) {
         vector<Pipe>::iterator startitr = mPipes.begin();
         vector<Pipe>::iterator enditr = mPipes.begin();
@@ -258,7 +256,7 @@ void GameController::movePipes()
     }
 }
        
-    
+ // metoda pohybuje pomocnými lajnami, když není kolize s netopýrem > score++, při kolizi  > gameover a pak je odstraňuje     
 void GameController::moveLines()
 {
     if (mGame.gameState == started) {
@@ -291,7 +289,7 @@ void GameController::moveLines()
 }
 
 //metoda je zodpovědná za vykreslování herních objektů a aktualizaci zobrazení herního okna
-//Vyčistí okno, vykreslí pozadí, netopýra a sloupy a také skóre a highscore. Pokud je hra ve stavu "game over", zobrazí také zprávu o ukončení hry a zprávu o restartu. Nakonec aktualizuje počet snímků hry a zobrazí aktualizované okno.
+//Vyčistí okno, vykreslí pozadí, netopýra a sloupy a také skóre a highscore. Pokud je hra ve stavu "game over", zobrazí "game over" a zprávu o restartu. Nakonec aktualizuje počet snímků hry a zobrazí aktualizované okno.
 
 void GameController::draw()
 {
@@ -308,7 +306,7 @@ void GameController::draw()
      */
     
 
-    // kresleni sloupu
+    // kresleni sloupů
     
     for (int i = 0; i < mPipes.size(); i++) {
           mWindow.draw(mPipes[i].sprite);
@@ -336,10 +334,10 @@ void GameController::draw()
 }
 
 //metoda je zodpovědná za zpracování vstupních událostí uživatele, jako je stisknutí
-//mezerníku pro rozhození netopýra nebo stisknutí klávesy "N" pro restartování hry.
+//mezerníku pro pohyb netopýra nebo stisknutí klávesy "N" pro restartování hry.
 //Pokud uživatel zavře okno, metoda ukončí hru.
 //Pokud uživatel stiskne mezerník, když je hra ve stavu "waiting" nebo "started",//
-//způsobí klapnutí netopýra a přehraje zvukový efekt. Pokud uživatel stiskne klávesu
+//způsobí vertikální pohyb netopýra a přehraje zvukový efekt. Pokud uživatel stiskne klávesu
 //"N", když je hra ve stavu "game over", vynuluje stav hry, skóre a herní objekty.
 void GameController::handleEvents()
 {
@@ -367,7 +365,7 @@ void GameController::handleEvents()
             
             
 
-        // restart
+        // restart, NewGame
         } else if (event.type == Event::KeyPressed &&
                    event.key.code == Keyboard::N &&
                    mGame.gameState == gameover) {
